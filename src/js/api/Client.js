@@ -39,6 +39,8 @@ export default class Client {
       params: { date: `${formatDate(fromDate)}:${formatDate(toDate)}` },
     })
 
+  projectBudget = (projectId) => this.#client.get(`projects/${projectId}/budget`)
+
   activities = (fromDate, toDate) =>
     this.#client.get("activities", {
       params: { date: `${formatDate(fromDate)}:${formatDate(toDate)}` },
