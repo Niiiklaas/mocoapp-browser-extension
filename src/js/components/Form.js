@@ -21,6 +21,7 @@ class Form extends Component {
     }).isRequired,
     errors: PropTypes.object,
     projects: PropTypes.array.isRequired,
+    projectBudgets: PropTypes.array.isRequired,
     onChange: PropTypes.func.isRequired,
     onSubmit: PropTypes.func.isRequired,
   }
@@ -77,8 +78,17 @@ class Form extends Component {
   }
 
   render() {
-    const { projects, changeset, errors, onChange, onSubmit } = this.props
+    const { projects, projectBudgets, changeset, errors, onChange, onSubmit } = this.props
     const project = Select.findOptionByValue(projects, changeset.assignment_id)
+
+    const projectsWithBudgets = [...projects].reduce((accProjects, project) => {
+      const options = project.options.map((option) => {
+        const budget = projectBudgets.find((budget) => budget.project_id === option.value)
+        return { ...option, budget: budget?.budget_remaining_in_hours }
+      })
+
+      return [...accProjects, { ...project, options }]
+    }, [])
 
     return (
       <form onSubmit={onSubmit}>
@@ -91,7 +101,7 @@ class Form extends Component {
             className="moco-bx-select"
             name="assignment_id"
             placeholder="Auswählen..."
-            options={projects}
+            options={projectsWithBudgets}
             value={changeset.assignment_id}
             hasError={!!errors.assignment_id}
             onChange={onChange}
