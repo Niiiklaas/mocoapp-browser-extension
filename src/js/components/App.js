@@ -1,6 +1,7 @@
 import React, { Component } from "react"
-import PropTypes from "prop-types"
 import browser from "webextension-polyfill"
+import ApiClient from "../api/Client"
+import { getSettings } from "../utils/browser"
 import { sendMessage } from "webext-bridge/content-script"
 import { onMessage } from "webext-bridge/popup"
 import Spinner from "components/Spinner"
@@ -39,6 +40,7 @@ class App extends Component {
       activities: [],
       schedules: [],
       projects: [],
+      projectBudgets: [],
     }
   }
 
@@ -104,7 +106,7 @@ class App extends Component {
     window.removeEventListener("message", this.handleMessagePopupData)
   }
 
-  handleChange = (event) => {
+  handleChange = async (event) => {
     const { projects } = this.state
     const {
       target: { name, value },
@@ -115,6 +117,22 @@ class App extends Component {
     if (name === "assignment_id") {
       const project = findProjectByValue(value)(projects)
       this.changeset.task_id = defaultTask(project?.tasks)?.value
+
+      const { version } = browser.runtime.getManifest()
+      const { subdomain, apiKey } = await getSettings(false)
+      const apiClient = new ApiClient({ subdomain, apiKey, version })
+      const { data: projectBudget } = await apiClient.projectBudget(project.value)
+
+      if (!projectBudget?.project_id) return
+      this.setState((currentState) => ({
+        ...currentState,
+        projectBudgets: [
+          ...currentState.projectBudgets.filter(
+            ({ project_id }) => project_id !== projectBudget.project_id,
+          ),
+          projectBudget,
+        ],
+      }))
     }
   }
 
@@ -162,6 +180,7 @@ class App extends Component {
       loading,
       subdomain,
       projects,
+      projectBudgets,
       timedActivity,
       activities,
       schedules,
@@ -207,6 +226,7 @@ class App extends Component {
                 <Form
                   changeset={this.changesetWithDefaults}
                   projects={projects}
+                  projectBudgets={projectBudgets}
                   errors={this.formErrors}
                   onChange={this.handleChange}
                   onSubmit={this.handleSubmit}
