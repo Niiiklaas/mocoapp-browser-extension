@@ -50,13 +50,18 @@ class App extends Component {
   @computed get project() {
     const { service, projects, serviceLastProjectId, userLastProjectId } = this.state
 
-    return (
+    const project =
       findProjectByValue(this.changeset.assignment_id)(projects) ||
       findProjectByValue(Number(serviceLastProjectId))(projects) ||
       findProjectByIdentifier(service?.projectId)(projects) ||
       findProjectByValue(Number(userLastProjectId))(projects) ||
       head(projects.flatMap(get("options")))
-    )
+
+    if (project?.value) {
+      this.fetchProjectBudgets(project.value)
+    }
+
+    return project
   }
 
   @computed get task() {
@@ -106,6 +111,28 @@ class App extends Component {
     window.removeEventListener("message", this.handleMessagePopupData)
   }
 
+  fetchProjectBudgets = async (projectId) => {
+    const { projects } = this.state
+    const project = findProjectByValue(projectId)(projects)
+    this.changeset.task_id = defaultTask(project?.tasks)?.value
+
+    const { version } = browser.runtime.getManifest()
+    const { subdomain, apiKey } = await getSettings(false)
+    const apiClient = new ApiClient({ subdomain, apiKey, version })
+    const { data: projectBudget } = await apiClient.projectBudget(project.value)
+
+    if (!projectBudget?.project_id) return
+    this.setState((currentState) => ({
+      ...currentState,
+      projectBudgets: [
+        ...currentState.projectBudgets.filter(
+          ({ project_id }) => project_id !== projectBudget.project_id,
+        ),
+        projectBudget,
+      ],
+    }))
+  }
+
   handleChange = async (event) => {
     const { projects } = this.state
     const {
@@ -113,26 +140,8 @@ class App extends Component {
     } = event
 
     this.changeset[name] = value
-
     if (name === "assignment_id") {
-      const project = findProjectByValue(value)(projects)
-      this.changeset.task_id = defaultTask(project?.tasks)?.value
-
-      const { version } = browser.runtime.getManifest()
-      const { subdomain, apiKey } = await getSettings(false)
-      const apiClient = new ApiClient({ subdomain, apiKey, version })
-      const { data: projectBudget } = await apiClient.projectBudget(project.value)
-
-      if (!projectBudget?.project_id) return
-      this.setState((currentState) => ({
-        ...currentState,
-        projectBudgets: [
-          ...currentState.projectBudgets.filter(
-            ({ project_id }) => project_id !== projectBudget.project_id,
-          ),
-          projectBudget,
-        ],
-      }))
+      this.fetchProjectBudgets(value)
     }
   }
 
