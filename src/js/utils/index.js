@@ -127,7 +127,7 @@ export const projectIdentifierBySelector =
 export const mocoHost = () =>
   process.env.NODE_ENV === "development" && process.env.USE_LOCAL_MOCO
     ? "mocoapp.localhost:3000"
-    : "staging-v5.mocoapp.com"
+    : "mocoapp.com"
 
 export const mocoProtocol = () =>
   process.env.NODE_ENV === "development" && process.env.USE_LOCAL_MOCO ? "http" : "https"

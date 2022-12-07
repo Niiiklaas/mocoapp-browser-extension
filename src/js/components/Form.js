@@ -79,17 +79,20 @@ class Form extends Component {
 
   render() {
     const { projects, projectBudgets, changeset, errors, onChange, onSubmit } = this.props
-    const project = Select.findOptionByValue(projects, changeset.assignment_id)
 
     const projectsWithBudgets = [...projects].reduce((accProjects, project) => {
       const options = project.options.map((option) => {
         const budget = projectBudgets.find((budget) => budget.project_id === option.value)
-        return { ...option, budget: budget?.budget_remaining_in_hours }
+        const tasks = option.tasks.map((task) => {
+          const taskBudget = budget?.tasks.find((taskBudget) => taskBudget.task_id === task.value)
+          return { ...task, budget: taskBudget?.budget_remaining_in_hours }
+        })
+        return { ...option, budget: budget?.budget_remaining_in_hours, tasks }
       })
-
       return [...accProjects, { ...project, options }]
     }, [])
 
+    const project = Select.findOptionByValue(projectsWithBudgets, changeset.assignment_id)
     return (
       <form onSubmit={onSubmit}>
         <div

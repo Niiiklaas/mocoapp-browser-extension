@@ -82,13 +82,18 @@ SingleValue.propTypes = {
 function SingleValue({ children, ...props }) {
   let label = isNil(props.data.customerName) ? children : `${props.data.customerName}: ${children}`
 
-  if (props.data.budget) {
-    label = `${label} (${props.data.budget}h)`
-  }
-
   return (
     <components.SingleValue {...props}>
-      {label} {props.data.budget && <span style={{ color: "green" }}>({props.data.budget}h)</span>}
+      <div style={{ display: "flex" }}>
+        <div style={{ flex: "1 1 100%", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {label}
+        </div>
+        <div>
+          {props.data.budget && (
+            <span style={{ color: "rgb(125, 195, 50)" }}>({props.data.budget}h)</span>
+          )}
+        </div>
+      </div>
     </components.SingleValue>
   )
 }
@@ -97,7 +102,9 @@ const CustomOption = ({ children, ...props }) => {
   return (
     <components.Option {...props}>
       {children}{" "}
-      {props.data.budget && <span style={{ color: "green" }}>({props.data.budget}h)</span>}
+      {props.data.budget && (
+        <span style={{ color: "rgb(125, 195, 50)" }}>({props.data.budget}h)</span>
+      )}
     </components.Option>
   )
 }
