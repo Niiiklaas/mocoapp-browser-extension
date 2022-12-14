@@ -29,6 +29,13 @@ class Form extends Component {
     inline: true,
   }
 
+  constructor(props) {
+    super(props)
+    this.state = {
+      showTagSelector: false,
+    }
+  }
+
   isValid() {
     const { changeset } = this.props
     return (
@@ -69,10 +76,16 @@ class Form extends Component {
 
   handleTextareaKeyDown = (event) => {
     const { onSubmit } = this.props
-
+    const { value } = event.target
     if (event.key === "Enter") {
       event.preventDefault()
       this.isValid() && onSubmit(event)
+    }
+
+    if (/#.\S*$/.test(value + event.key)) {
+      this.setState({ showTagSelector: true })
+    } else {
+      this.setState({ showTagSelector: false })
     }
   }
 
@@ -136,6 +149,7 @@ class Form extends Component {
           {errors.description ? (
             <div className="form-error">{errors.description.join("; ")}</div>
           ) : null}
+          {this.state.showTagSelector && <div>TAG SELECTOR!!!</div>}
         </div>
 
         <button
